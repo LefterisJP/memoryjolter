@@ -24,14 +24,14 @@ class ParallelTried(object):
         self.threadsnum = threadsnum
         self.multiplier = int(100 / threadsnum)
 
-        def maybe_update_tried(self, tried, count, threadid):
-            if count != 0 and count % ((threadid + 1) * 25) == 0:
-                with self.lock:
-                    self.tried.extend(tried)
-                    write_tried_file(self.tried)
-                    return []
-            else:
-                return tried
+    def maybe_update_tried(self, tried, count, threadid):
+        if count != 0 and count % ((threadid + 1) * 25) == 0:
+            with self.lock:
+                self.tried.extend(tried)
+                write_tried_file(self.tried)
+                return []
+        else:
+            return tried
 
 
 def when_found_in_thread(password):
@@ -176,10 +176,9 @@ def search_perthread(keyfile, possibilities, identifier, ctx):
     return tried
 
 
-def generate_possibilities(inputfile):
+def generate_possibilities(inputfile, respect_word_order):
     tried = import_tried_file()
     words = []
-    phraselists = []
     with open(inputfile, 'r') as f:
         inputdata = json.loads(f.read())
 
@@ -207,7 +206,11 @@ def generate_possibilities(inputfile):
     possibilities = word_perms[0]
     for perm in word_perms[1:]:
 
-        possibilities = get_product(possibilities, perm, oneway=False)
+        possibilities = get_product(
+            possibilities,
+            perm,
+            oneway=respect_word_order
+        )
 
     possibilities = list(set(possibilities) - set(tried))
     return possibilities, tried
@@ -260,14 +263,40 @@ def start_search(keyfile, possibilities, tried, threads):
     required=True,
     type=click.Path(exists=True),
 )
+@click.option(
+    '--input-file',
+    help=(
+        'Path to the input file containing the words to combine in order to '
+        'find the password.'
+    ),
+    required=True,
+    type=click.Path(exists=True),
+)
+@click.option(
+    '--respect-word-order/--no-respect-word-order',
+    help=(
+        'Respect the word order at which the words are given at input. If this'
+        ' is True then all possible combinations of the word permutations and '
+        'wordlists are attempted but in the given order. If not all orders are'
+        ' attempted.'
+    ),
+    default=True,
+    show_default=True,
+)
 @click.group(invoke_without_command=True)
 @click.pass_context
-def main(ctx, threads, keyfile, input_file, **kwargs):
+def main(ctx, threads, keyfile, input_file, respect_word_order, **kwargs):
     if ctx.invoked_subcommand is not None:
         ctx.obj = kwargs
     else:
-        possibilities, tried = generate_possibilities(input_file)
+        possibilities, tried = generate_possibilities(
+            input_file,
+            respect_word_order
+        )
         start_search(keyfile, possibilities, tried, threads)
+
+    # if we get here means no luck
+    print("Password not found :( ... Quitting ...!")
 
 
 @main.command()
