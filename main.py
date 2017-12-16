@@ -70,6 +70,9 @@ def get_product(l1, l2, oneway=True):
 
 
 def _generate_word_permutations(word):
+    """Generate permutations of a word according to a set of rules. This function
+    contains rules for all possible combinations of 1337 speak and
+    capitalizations"""
     words = [word]
     for i, letter in enumerate(word):
         if letter == 'a':
@@ -105,13 +108,13 @@ def generate_word_permutations(word):
     return list(set(_generate_word_permutations(word)))
 
 
-def call(password):
-    print("--------------------------------------------------------------------------")
+def call(keyfile, password):
+    print("------------------------------------------------------------------")
     print("Trying {}".format(password))
-    print("--------------------------------------------------------------------------")
+    print("------------------------------------------------------------------")
 
     try:
-        Account.load("accountkeyfilegoeshere", password=password)
+        Account.load(keyfile, password=password)
     except ValueError as e:
         if str(e) == 'MAC mismatch. Password incorrect?':
             return False
@@ -131,7 +134,7 @@ def import_tried_file(name='tried.json'):
     return tried
 
 
-def search_onethread(possibilities, tried):
+def search_onethread(keyfile, possibilities, tried):
     total = len(possibilities)
     time1 = time.time()
     time_diff = None
@@ -150,7 +153,7 @@ def search_onethread(possibilities, tried):
             print("----- Estimated Time Remaining: {} mins".format(mins))
             estimate_given = mins
             time_diff = None
-        if call(password):
+        if call(keyfile, password):
             print("FOUND IT")
             sys.exit(0)
 
@@ -162,7 +165,7 @@ def search_onethread(possibilities, tried):
             estimate_given = True
 
 
-def search_perthread(possibilities, identifier, ctx):
+def search_perthread(keyfile, possibilities, identifier, ctx):
     total = len(possibilities)
     tried = []
     for count, password in enumerate(possibilities):
@@ -172,7 +175,7 @@ def search_perthread(possibilities, identifier, ctx):
                 total,
                 len(tried)
         ))
-        if call(password):
+        if call(keyfile, password):
                 when_found_in_thread(password)
 
         tried.append(password)
@@ -190,14 +193,23 @@ def generate_possibilities():
     return possibilities, tried
 
 
-def start_search(possibilities, tried, threads):
+def start_search(keyfile, possibilities, tried, threads):
     if threads == 1:
-        search_onethread(possibilities, tried)
+        search_onethread(keyfile, possibilities, tried)
     else:
         ctx = ParallelTried(tried, threads)
         split_possibilities = listchunks(possibilities, threads)
         with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as executor:
-                futures = [executor.submit(search_perthread, workchunk, threadid, ctx) for threadid, workchunk in enumerate(split_possibilities)]
+                futures = [
+                    executor.submit(
+                        search_perthread,
+                        keyfile,
+                        workchunk,
+                        threadid,
+                        ctx
+                    )
+                    for threadid, workchunk in enumerate(split_possibilities)
+                ]
 
                 results = []
                 for future in futures:
@@ -208,6 +220,12 @@ def start_search(possibilities, tried, threads):
 
 
 @click.option(
+    '--keyfile',
+    help='Path to the keyfile whose password we are trying to find',
+    required=True,
+    type=click.Path(exists=True),
+)
+@click.option(
         '--threads',
         required=False,
         help='number of threads to do work',
@@ -215,12 +233,12 @@ def start_search(possibilities, tried, threads):
 )
 @click.group(invoke_without_command=True)
 @click.pass_context
-def main(ctx, threads, **kwargs):
+def main(ctx, threads, keyfile, **kwargs):
     if ctx.invoked_subcommand is not None:
         ctx.obj = kwargs
     else:
         possibilities, tried = generate_possibilities()
-        start_search(possibilities, tried, threads)
+        start_search(keyfile, possibilities, tried, threads)
 
 
 @main.command()
@@ -266,8 +284,14 @@ def make_tried_unique_list(filename):
 
 @main.command()
 @click.argument('password')
-def trypass(password):
-        if not call(password):
+@click.option(
+    '--keyfile',
+    help='Path to the keyfile whose password we are trying to find',
+    required=True,
+    type=click.Path(exists=True),
+)
+def trypass(keyfile, password):
+        if not call(keyfile, password):
             print("Password mismatch")
 
 
