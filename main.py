@@ -11,13 +11,6 @@ import threading
 from pyethapp.accounts import Account
 
 
-endings = [
-    '1234',
-    'boo',
-    'foo'
-]
-
-
 def write_tried_file(tried, filename='tried.json'):
     with open(filename, 'w') as f:
         f.write(json.dumps(tried))
@@ -183,12 +176,39 @@ def search_perthread(keyfile, possibilities, identifier, ctx):
     return tried
 
 
-def generate_possibilities():
+def generate_possibilities(inputfile):
     tried = import_tried_file()
-    perm1 = generate_word_permutations("robot")
-    perm2 = generate_word_permutations("paramiko")
-    possibilities = get_product(perm1, perm2, oneway=False)
-    possibilities = get_product(possibilities, endings)
+    words = []
+    phraselists = []
+    with open(inputfile, 'r') as f:
+        inputdata = json.loads(f.read())
+
+    for entry in inputdata:
+        if isinstance(entry, basestring):
+            words.append(entry)
+        elif isinstance(entry, list):
+            if not all(isinstance(x, basestring) for x in entry):
+                print("Provided a list at input that does not contain only strings")
+                sys.exit(1)
+
+            words.append(entry)
+
+    if len(words) == 0:
+        print("Provided no words in the input list")
+        sys.exit(1)
+
+    word_perms = []
+    for word in words:
+        if isinstance(word, list):
+            word_perms.append(word)
+        else:
+            word_perms.append(generate_word_permutations(word))
+
+    possibilities = word_perms[0]
+    for perm in word_perms[1:]:
+
+        possibilities = get_product(possibilities, perm, oneway=False)
+
     possibilities = list(set(possibilities) - set(tried))
     return possibilities, tried
 
@@ -226,18 +246,27 @@ def start_search(keyfile, possibilities, tried, threads):
     type=click.Path(exists=True),
 )
 @click.option(
-        '--threads',
-        required=False,
-        help='number of threads to do work',
-        default=1,
+    '--threads',
+    required=False,
+    help='number of threads to do work',
+    default=1,
+)
+@click.option(
+    '--input-file',
+    help=(
+        'Path to the input file containing the words to combine in order to '
+        'find the password.'
+    ),
+    required=True,
+    type=click.Path(exists=True),
 )
 @click.group(invoke_without_command=True)
 @click.pass_context
-def main(ctx, threads, keyfile, **kwargs):
+def main(ctx, threads, keyfile, input_file, **kwargs):
     if ctx.invoked_subcommand is not None:
         ctx.obj = kwargs
     else:
-        possibilities, tried = generate_possibilities()
+        possibilities, tried = generate_possibilities(input_file)
         start_search(keyfile, possibilities, tried, threads)
 
 
