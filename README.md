@@ -1,7 +1,7 @@
 # Memory Jolter
 
 Memory jolter is a python script with the intention to help people who have forgotten their ethereum keyfile password but still
-vaguely remember possible combination of words that the password may have had. The script works by trying all possile combinations
+vaguely remember possible combination of words that the password may have had. The script works by trying all possible combinations
 of all possible permutations of the words depending on some rules. The permutation rules are hardcoded but can be easily adjusted
 by tweaking the appropriate function.
 
@@ -9,7 +9,7 @@ The hardcoded permutation rules are for capilatization and 1337 speak, which is 
 
 ## Installation
 
-You will need python 2.7. This sript does not work with python 3 due to dependency on pyethapp for unlocking the account.
+You will need python 2.7. This script does not work with python 3 due to dependency on pyethapp for unlocking the account.
 
 Create a [virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/) for memory jolter and then install the requirements
 by doing `pip install -r requirements.txt`.
@@ -30,7 +30,7 @@ With `--input-file pathtoinputfile` you need to provide the path to the file whi
 act as input and whose permutations and combinations will be used to find the password.
 
 The input file needs to be in JSON format and contain a JSON list. Each element of the list needs to contain either a string
-or a list of string. For each string in the list we will compute all possible permutations. For each wordlist we will not compute
+or a list of strings. For each string in the list we will compute all possible permutations. For each wordlist we will not compute
 permutations but take all possible combinations of the words in the wordlist.
 
 As an example look at the following json file:
@@ -42,7 +42,7 @@ As an example look at the following json file:
 This will produce the following possibilities:
 
 ```json
-['c@T12', 'CaT$#', 'C4T$#', 'caT12', 'C@t12', 'C@t$#', 'C4t$#', 'cAT$#', 'cAt$#', 'CaT12', 'c@T$#', 'CAT12', 'C4t12', 'c4t$#', 'CAt$#', 'c4T$#', 'cAt12', 'C@T12', 'Cat12', 'c4T12', 'c@t12', 'CAT$#', 'caT$#', 'cAT12', 'Cat$#', 'cat$#', 'C@T$#', 'CAt12', 'cat12', 'C4T12', 'c@t$#', 'c4t12']
+["c@T12", "CaT$#", "C4T$#", "caT12", "C@t12", "C@t$#", "C4t$#", "cAT$#", "cAt$#", "CaT12", "c@T$#", "CAT12", "C4t12", "c4t$#", "CAt$#", "c4T$#", "cAt12", "C@T12", "Cat12", "c4T12", "c@t12", "CAT$#", "caT$#", "cAT12", "Cat$#", "cat$#", "C@T$#", "CAt12", "cat12", "C4T12", "c@t$#", "c4t12"]
 ```
 
 all of which will be tried against the provided keyfile
@@ -54,7 +54,7 @@ This option is on by default. And it can be turned off by providing `--no-respec
 By providing `--no-respect-word-order` for the example input file given above we would get the following password possibilities, essentially doubling them:
 
 ```json
-['caT$#', 'c@T12', 'CaT$#', 'C4T$#', 'caT12', '$#C4t', '12C4t', '$#c@t', '$#CaT', '12C@t', '12CaT', 'C@t12', 'C@T$#', '12CAt', '$#c@T', 'c@T$#', 'C4t$#', 'cAT$#', 'cAt$#', '12c@t', 'CaT12', '$#cAT', '$#C4T', '12C4T', 'C@t$#', '$#caT', '12C@T', '12caT', '12Cat', '$#Cat', 'c4T12', 'cAt12', 'c4t$#', 'CAt$#', 'c4T$#', 'CAT12', '$#CAT', '$#c4T', '12c4T', '$#C@T', '12cAT', 'C@T12', 'Cat12', '12cAt', 'C4t12', '$#CAt', 'c@t12', 'CAT$#', '$#cat', '12c@T', 'cAT12', 'Cat$#', 'cat$#', '$#cAt', '12c4t', '$#C@t', '12cat', 'CAt12', '12CAT', '$#c4t', 'cat12', 'C4T12', 'c@t$#', 'c4t12']
+["caT$#", "c@T12", "CaT$#", "C4T$#", "caT12", "$#C4t", "12C4t", "$#c@t", "$#CaT", "12C@t", "12CaT", "C@t12", "C@T$#", "12CAt", "$#c@T", "c@T$#", "C4t$#", "cAT$#", "cAt$#", "12c@t", "CaT12", "$#cAT", "$#C4T", "12C4T", "C@t$#", "$#caT", "12C@T", "12caT", "12Cat", "$#Cat", "c4T12", "cAt12", "c4t$#", "CAt$#", "c4T$#", "CAT12", "$#CAT", "$#c4T", "12c4T", "$#C@T", "12cAT", "C@T12", "Cat12", "12cAt", "C4t12", "$#CAt", "c@t12", "CAT$#", "$#cat", "12c@T", "cAT12", "Cat$#", "cat$#", "$#cAt", "12c4t", "$#C@t", "12cat", "CAt12", "12CAT", "$#c4t", "cat12", "C4T12", "c@t$#", "c4t12"]
 ```
 
 ### Threads
@@ -67,9 +67,9 @@ If you provide a number bigger than `1` here then the possible search space for 
 
 ## Saving tried passwords
 
-In case you need to quit the program or it crashes we keep all the tried combinations in a local file called `tried.json`. When the program restarts then the `tried.json` is read and all already attempted passwords are subtracted from the search space.
+In case you need to quit the program or it crashes we regularly write all the tried combinations in a local file called `tried.json`. When the program restarts then the `tried.json` is read and all already attempted passwords are subtracted from the search space.
 
-This way you can resume your search at another time if it takes too long.
+This way you can resume your search at a future time if it takes too long.
 
 ## Other commands
 
@@ -87,15 +87,15 @@ and the result is saved into `combinedtried.json`
 
 ### Checking the number of tried passwords
 
-You can inspect a tried file by using this comands:
+You can inspect a tried file by using this comand:
 
 `python main.py check_tried_length FILE`
 
-By Default `FILE` is `tried.json`. This will return how many passwords have already been attempted. As the program continuously writes on this file, you can query this while the program runs.
+By Default `FILE` is `tried.json`. This will return how many passwords have already been attempted. As the program continuously writes on this file, you can query this while the program runs to inspect progress.
 
 ### Compact the number of tried passwords
 
-Even though the script should not write duplicated entried into the `tried.json` file it can happen due to some logic error. This command allows you to compact it and delete any and all duplicate entries.
+Even though the script should not write duplicated entries into the `tried.json` file it can happen due to some logic error. This command allows you to compact it and delete any and all duplicate entries.
 
 `python main.py make_tried_unique_list FILE`
 
@@ -108,4 +108,4 @@ By using this command you can attempt to unlock the keyfile by providing a passw
 `python main.py --keyfile PATHTOKEYFILE PASSWORDGOESHERE`
 
 
-
+Be careful here because the attempted password will be saved in your shell's history!
